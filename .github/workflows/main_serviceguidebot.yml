@@ -60,4 +60,4 @@ jobs:
         with:
           app-name: 'ServiceGuideBot'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_06A007CDC19144A8AF6702382E08CF85 }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_B54FFC1DFE2449A5880A3F495C01221C }}
