@@ -1,0 +1,125 @@
+## This Bot is based on the examples provided by the Microsoft Azure team.
+## A version of the original code examples can be found on the Microsoft Github-repo here: https://github.com/microsoft/BotBuilder-Samples
+## Licensed under the MIT License.
+
+## - Project Info -
+# Github-repo: https://github.com/codingPotato21/CSC408-ASSI1
+# Contributors: 
+#       1- Adnan Youssef
+#       2- Naji Mohammed
+#       3- Omar Ahmed
+## Licensed under the MIT License.
+
+from typing import List
+
+from botbuilder.dialogs import (
+    WaterfallDialog,
+    WaterfallStepContext,
+    DialogTurnResult,
+    ComponentDialog,
+)
+from botbuilder.dialogs.prompts import ChoicePrompt, PromptOptions
+from botbuilder.dialogs.choices import Choice, FoundChoice
+from botbuilder.core import MessageFactory
+
+
+class SearchSelectionDialog(ComponentDialog):
+    def __init__(self, dialog_id: str = None):
+        super(SearchSelectionDialog, self).__init__(
+            dialog_id or SearchSelectionDialog.__name__
+        )
+
+        self.COMPANIES_SELECTED = "value-companiesSelected"
+
+        self.available_services = None
+
+        self.add_dialog(ChoicePrompt(ChoicePrompt.__name__))
+        self.add_dialog(
+            WaterfallDialog(
+                WaterfallDialog.__name__, [self.selection_step, self.final_step]
+            )
+        )
+
+        self.initial_dialog_id = WaterfallDialog.__name__
+
+    async def selection_step(self, step_context: WaterfallStepContext) -> DialogTurnResult:
+        # step_context.options will contains the value passed in begin_dialog or replace_dialog.
+        # if this value wasn't provided then start with an emtpy selection list.  This list will
+        # eventually be returned to the parent via end_dialog.
+        selected: [str] = step_context.options if step_context.options is not None else []
+        step_context.values[self.COMPANIES_SELECTED] = selected
+
+        # If the selection list is empty gracefully exit
+        if self.available_services is None:
+            status = f"Sorry i am unable to find the service you are looking for."
+            await step_context.context.send_activity(MessageFactory.text(status))
+            return await step_context.end_dialog(selected)
+        elif len(self.available_services) == 0:
+            status = f"Sorry i am unable to find the service you are looking for."
+            await step_context.context.send_activity(MessageFactory.text(status))
+            return await step_context.end_dialog(selected)
+
+        # create a list of options to choose, with already selected items removed.
+        options = self.available_services.copy()
+        if len(selected) > 0:
+            options.remove(selected[0])
+
+        # prompt with the list of choices
+        prompt_options = PromptOptions(
+            prompt=MessageFactory.text(f"The following services match your search, Please choose a service to review."),
+            retry_prompt=MessageFactory.text("Please choose an option from the list."),
+            choices=self._to_choices(options),
+        )
+        return await step_context.prompt(ChoicePrompt.__name__, prompt_options)
+
+    def _to_choices(self, choices: [str]) -> List[Choice]:
+        choice_list: List[Choice] = []
+        for choice in choices:
+            choice_list.append(Choice(value=choice))
+        return choice_list
+
+    async def final_step(self, step_context: WaterfallStepContext) -> DialogTurnResult:
+        selected: List[str] = step_context.values[self.COMPANIES_SELECTED]
+        choice: FoundChoice = step_context.result
+        selected.append(choice.value)
+
+        if (choice.value == "Fines' Materials Inquiry"):
+            selected.append("This service allows you to search for traffic fines' materials values and black points. \n\n"
+            f"**Requirment:** Emirate and Material code \n\n"
+            f"* Service-URL: https://es.adpolice.gov.ae/trafficservices/PublicServices/MaterialsInquiry.aspx?Culture=en")
+
+        elif (choice.value == "Vehicle's Accidents Inquiry"):
+            selected.append("This service allows you to retrieve all accidents happened for a specific vehicle. \n\n"
+                f"**Requirment:** Chassis Number \n\n"
+                f"* Service-URL: https://es.adpolice.gov.ae/trafficservices/PublicServices/AccidentsInquiry.aspx?Culture=en")
+
+        elif (choice.value == "Payment Receipts Inquiry"):
+            selected.append("This service allows you to inquire for a specific receipt using its number. \n\n"
+                f"**Requirment:** Receipt Number \n\n"
+                f"* Service-URL: https://es.adpolice.gov.ae/trafficservices/PublicServices/ReceiptsInquiry.aspx?Culture=en")
+
+        elif (choice.value == "Vehicle's Certificate Inquiry"):
+            selected.append("This service allows you to inquire about about a specific vehicle's certificate using its number. \n\n"
+                f"**Requirment:** Certificate Number \n\n"
+                f"* Service-URL: https://es.adpolice.gov.ae/trafficservices/PublicServices/CertificateInquiry.aspx?Culture=en")
+
+        elif (choice.value == "Reserved Plates Inquiry"):
+            selected.append("This service allows you to check the expiry date for a reserved plate. \n\n"
+                f"**Requirment:** Traffic Number, Plate Number, Plate Source, Plate Color, Plate Kind \n\n"
+                f"* Service-URL: https://es.adpolice.gov.ae/trafficservices/PublicServices/ReservedPlatesInquiry.aspx?Culture=en")
+
+        elif (choice.value == "Traffic Fines Inquiry"):
+            selected.append("This service allows you to inquire about existing traffic fines. \n\n"
+                f"**Requirment:** Traffic Number, Emirates ID, Vehicle Plate, or Driving License \n\n"
+                f"* Service-URL: https://es.adpolice.gov.ae/TrafficServices/FinesPublic/Inquiry.aspx?Culture=en")
+
+        elif (choice.value == "Registered Vehicles Inquiry"):
+            selected.append("This service allows you to inquire about your registered vehicles.\n\n"
+                f"**Requirment:** Username and Password \n\n"
+                f"* Service-URL:https://es.adpolice.gov.ae/TrafficServices/Registration/login.aspx?ReturnUrl=%2fTrafficServices%2fPublicServices%2fRegisteredVehicles.aspx%3fCulture%3den&Culture=en")
+
+        elif (choice.value == "Other Services"):
+            selected.append("You can visit the public services section in the AD Police website here.\n\n"
+            f"* Service-URL: https://es.adpolice.gov.ae/TrafficServices/PublicServices/Default.aspx?Culture=en ")
+
+        return await step_context.end_dialog(selected)
