@@ -5,7 +5,7 @@
 
 ## - Project Info -
 # Github-repo: https://github.com/codingPotato21/CSC408-ASSI1
-# Contributors: 
+# Contributors:
 #       1- Adnan Youssef
 #       2- Naji Mohammed
 #       3- Omar Ahmed
@@ -20,5 +20,5 @@ class DefaultConfig:
     """ Bot Configuration """
 
     PORT = 3978
-    APP_ID = os.environ.get("MicrosoftAppId", "")
+    APP_ID = os.environ.get("MicrosoftAppId", "f123b13e-0e90-4651-b0e0-ebe23bd53d0e")
     APP_PASSWORD = os.environ.get("MicrosoftAppPassword", "")
